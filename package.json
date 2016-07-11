@@ -1,0 +1,14 @@
+{
+  "name": "TinyURL",
+  "version": "1.0.0",
+  "description": "Node.js",
+  "author": "YUWEI <dyf102@gmail.com>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.13.3",
+    "redis": "^0.12.1"
+  }
+}
