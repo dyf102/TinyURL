@@ -1,5 +1,5 @@
 # TinyURL
-A URL shortify service using Redis, Kafka, Spark, Docker, Docker composite
+A URL shortify service using Nodejs,Expressjs, Redis, Kafka, Spark, Docker, Docker composite
 
 ##TODO
 1.	Intergate Kafka and Spark stream to store and analysis the user log
