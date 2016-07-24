@@ -4,44 +4,80 @@ const express = require('express');
 const http = require('http');
 const redis = require('redis');
 const url = require('url');
+const kafka = require('kafka-node');
+const Producer = kafka.Producer;
+const kafkaClient = new kafka.Client();
+const producer = new Producer(kafkaClient);
 // Constants
 const PORT = 8080;
 const client = redis.createClient();
 
 // App
 const app = express();
+app.enable('trust proxy');
 app.on('mount',()=>{
 	
 });
 var counter = 1;
+var generateShortURL = (url) => {
+	return convertTobase64(url); 
+};
+var convertTobase64 = (url) =>{
+	var keystr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	var encodestr = "";
+	do{
+		encodestr += keystr[url % 62];
+		url = Math.floor(url/62);
+	}while(url);
+	console.log(encodestr);
+	return encodestr;
+};
+var req_ip = function(req) {
+        return ( req.headers["X-Forwarded-For"]
+                                        || req.headers["x-forwarded-for"]
+                                        || req.client.remoteAddress );
+}
 app.get('/*', (req, res) => {
 	var url_parts = url.parse(req.originalUrl, true);
 	var query = url_parts.query;
-	console.log(query);
+	console.log(req_ip(req));
 	var src = query['url'];
 	if('url' in query){
 		if(!src.startsWith('http')){
-			//src = 'http://' + src;
+			src = 'http://' + src;
 		}
-		var fullUrl = req.protocol + '://' + req.get('host') + '/' + counter;
-		console.log(fullUrl);
-		client.get(''+counter,(err,val) =>{
+		var shortURL = generateShortURL(counter);
+		var fullUrl = req.protocol + '://' + req.get('host') + '/' + shortURL;
+		console.log(shortURL);
+		client.get(shortURL,(err,val) =>{
 			if(val === null){
-				client.set(''+counter, src,()=>{
+				client.set(shortURL, src,()=>{
 					counter ++;
+					client.set(src,shortURL,()=>{
+
+					});
 				});
 			}
 			res.send(fullUrl);
 		});
 	}else{
 		var key = req.url.substring(1);
-		console.log("hello "+ key)
-		client.get(key,(err,val) =>{
-			console.log(val);
-			res.status(307);
-			res.set("Location",val);
-			res.send("Redirect");
-		});
+		if(key === null){
+			res.status(404);
+			res.send("NOT FOUND");
+		}else{
+			//console.log("hello "+ key)
+			client.get(key,(err,val) =>{
+				if(val != null){
+					res.status(307);
+					res.set("Location",val);
+					res.send("Redirect");
+				}else{
+					res.status(404);
+					res.send("NOT FOUND");
+				}
+			});
+		}
 	}
 });
 
