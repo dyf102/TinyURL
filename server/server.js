@@ -15,10 +15,11 @@ const client = redis.createClient();
 // App
 const app = express();
 app.enable('trust proxy');
-app.on('mount',()=>{
-	
-});
 var counter = 1;
+client.send_command('dbsize',[],(err,size) =>{
+	counter = size;
+});
+
 var generateShortURL = (url) => {
 	return convertTobase64(url); 
 };
@@ -32,10 +33,15 @@ var convertTobase64 = (url) =>{
 	console.log(encodestr);
 	return encodestr;
 };
-var req_ip = function(req) {
+var redirect307 = (res,location) =>{
+	res.status(307);
+	res.set("Location",location);
+	res.send("Redirect");
+}
+var req_ip = (req) => {
         return ( req.headers["X-Forwarded-For"]
-                                        || req.headers["x-forwarded-for"]
-                                        || req.client.remoteAddress );
+              || req.headers["x-forwarded-for"]
+              || req.client.remoteAddress );
 }
 app.get('/*', (req, res) => {
 	var url_parts = url.parse(req.originalUrl, true);
@@ -46,32 +52,36 @@ app.get('/*', (req, res) => {
 		if(!src.startsWith('http')){
 			src = 'http://' + src;
 		}
-		var shortURL = generateShortURL(counter);
-		var fullUrl = req.protocol + '://' + req.get('host') + '/' + shortURL;
-		console.log(shortURL);
-		client.get(shortURL,(err,val) =>{
-			if(val === null){
-				client.set(shortURL, src,()=>{
-					counter ++;
-					client.set(src,shortURL,()=>{
-
+		client.get(src,(err,val) =>{
+			//console.log(val);
+			if(val === null) {
+				var shortURL = generateShortURL(counter);
+				var fullUrl = req.protocol + '://' + req.get('host') + '/' + shortURL;
+				console.log(shortURL);
+				client.get(shortURL,(err,val) =>{
+				if(val === null){
+					client.set(shortURL, src,()=>{
+						counter ++;
+						client.set(src,shortURL,()=>{});
 					});
+				}
+				res.send(fullUrl);
 				});
+			}else{
+				var fullUrl = req.protocol + '://' + req.get('host') + '/' + val;
+				res.send(fullUrl);
 			}
-			res.send(fullUrl);
-		});
+		})		
 	}else{
 		var key = req.url.substring(1);
 		if(key === null){
 			res.status(404);
 			res.send("NOT FOUND");
 		}else{
-			//console.log("hello "+ key)
+			console.log("hello "+ key)
 			client.get(key,(err,val) =>{
 				if(val != null){
-					res.status(307);
-					res.set("Location",val);
-					res.send("Redirect");
+					redirect307(res,val);
 				}else{
 					res.status(404);
 					res.send("NOT FOUND");
