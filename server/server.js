@@ -5,9 +5,7 @@ const http = require('http');
 const redis = require('redis');
 const url = require('url');
 const kafka = require('kafka-node');
-const Producer = kafka.Producer;
-const kafkaClient = new kafka.Client();
-const producer = new Producer(kafkaClient);
+
 // Constants
 const PORT = 8080;
 const client = redis.createClient();
@@ -16,9 +14,7 @@ const client = redis.createClient();
 const app = express();
 app.enable('trust proxy');
 var counter = 1;
-client.send_command('dbsize',[],(err,size) =>{
-	counter = size;
-});
+
 
 var generateShortURL = (url) => {
 	return convertTobase64(url); 
@@ -30,7 +26,7 @@ var convertTobase64 = (url) =>{
 		encodestr += keystr[url % 62];
 		url = Math.floor(url/62);
 	}while(url);
-	console.log(encodestr);
+	//console.log(encodestr);
 	return encodestr;
 };
 var redirect307 = (res,location) =>{
@@ -78,7 +74,7 @@ app.get('/*', (req, res) => {
 			res.status(404);
 			res.send("NOT FOUND");
 		}else{
-			console.log("hello "+ key)
+			//console.log("hello "+ key)
 			client.get(key,(err,val) =>{
 				if(val != null){
 					redirect307(res,val);
@@ -90,7 +86,10 @@ app.get('/*', (req, res) => {
 		}
 	}
 });
-
-app.listen(PORT,()=>{
-	console.log('Running on http://localhost:' + PORT);
+client.send_command('dbsize',[],(err,size) =>{
+	counter = size;
+	app.listen(PORT,()=>{
+		console.log('Running on http://localhost:' + PORT);
+	})
 });
+
