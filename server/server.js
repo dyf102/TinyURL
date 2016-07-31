@@ -39,7 +39,10 @@ var req_ip = (req) => {
               || req.headers["x-forwarded-for"]
               || req.client.remoteAddress );
 }
-app.get('/*', (req, res) => {
+app.get('/test', (req, res)=>{
+	res.send("Test");
+});
+app.get('/123', (req, res) => {
 	var url_parts = url.parse(req.originalUrl, true);
 	var query = url_parts.query;
 	console.log(req_ip(req));
@@ -53,7 +56,7 @@ app.get('/*', (req, res) => {
 			if(val === null) {
 				var shortURL = generateShortURL(counter);
 				var fullUrl = req.protocol + '://' + req.get('host') + '/' + shortURL;
-				console.log(shortURL);
+				//console.log(shortURL);
 				client.get(shortURL,(err,val) =>{
 				if(val === null){
 					client.set(shortURL, src,()=>{
