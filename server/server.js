@@ -39,10 +39,7 @@ var req_ip = (req) => {
               || req.headers["x-forwarded-for"]
               || req.client.remoteAddress );
 }
-app.get('/test', (req, res)=>{
-	res.send("Test");
-});
-app.get('/123', (req, res) => {
+app.get('/*', (req, res) => {
 	var url_parts = url.parse(req.originalUrl, true);
 	var query = url_parts.query;
 	console.log(req_ip(req));
