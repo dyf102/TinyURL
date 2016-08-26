@@ -5,7 +5,7 @@ const http = require('http');
 const redis = require('redis');
 const url = require('url');
 const kafka = require('kafka-node');
-
+const path = require('path');
 // Constants
 const PORT = 8080;
 const client = redis.createClient();
@@ -70,9 +70,10 @@ app.get('/*', (req, res) => {
 		})		
 	}else{
 		var key = req.url.substring(1);
-		if(key === null){
-			res.status(404);
-			res.send("NOT FOUND");
+		console.log(key);
+		if(key === null || key == ""){
+			console.log(__dirname);
+			res.sendFile(path.join(__dirname+'/static/index.html'));
 		}else{
 			//console.log("hello "+ key)
 			client.get(key,(err,val) =>{
