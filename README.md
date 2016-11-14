@@ -1,5 +1,7 @@
 # TinyURL
+===
 A URL shortify service using Nodejs,Expressjs, Redis, Kafka, Spark, Docker, Docker composite
+
 
 # How to use it
 ===
@@ -12,11 +14,12 @@ A URL shortify service using Nodejs,Expressjs, Redis, Kafka, Spark, Docker, Dock
 4.	Redis
 5. 	Node.js/Express.js
 
-
-> git clone https://github.com/dyf102/TinyURL
-> cd TinyURL
-> docker-compose up
-
+### How to run it
+```bash
+git clone https://github.com/dyf102/TinyURL
+cd TinyURL
+docker-compose up
+```
 ## TODO
 1.	To build the webpage	
 2.	Intergate Kafka and Spark stream to store and analysis the user log
