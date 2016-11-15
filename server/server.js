@@ -61,7 +61,7 @@ app.get('/*', (req, res) => {
 				client.get(shortURL,(err,val) =>{
 				if(val === null){
 					client.set(shortURL, src,()=>{
-						counter ++;
+						counter += totalNode;
 						client.set(src,shortURL,()=>{});
 					});
 				}
@@ -99,8 +99,9 @@ var existHandler = ()=>{
 };
 client.send_command('INCR',[SERVER_COUNTER],(err,size) =>{
 	counter = size;
+	// from redis client number to get the total node
 	client.send_command('CLIENT',['LIST'],(err,reply) =>{
-		console.log(reply);
+		totalNode = reply.split(/\r\n|\r|\n/).length - 1;
 	});
 	app.listen(PORT,()=>{
 		console.log('Running on http://localhost:' + PORT);
