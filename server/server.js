@@ -1,24 +1,28 @@
 'use strict';
 
-const express = require('express');
-const http = require('http');
-const redis = require('redis');
-const url = require('url');
-const kafka = require('kafka-node');
-const path = require('path');
+const express 	= 	require('express');
+const http 		= 	require('http');
+const redis 	= 	require('redis');
+const url 		= 	require('url');
+const kafka 	= 	require('kafka-node');
+const path 		= 	require('path');
+const assert	=	require('assert');
 // Constants
-const PORT = 8080;
-const client = redis.createClient('6379','redis');
+const PORT 		= 	8080;
+const client 	= 	redis.createClient();
 
 // App
 const app = express();
+const SERVER_COUNTER = "SERVER_COUNTER";
 app.enable('trust proxy');
 var counter = 1;
+var totalNode = 4;
+
 
 
 var generateShortURL = (url) => {
 	return convertTobase64(url); 
-};
+}
 var convertTobase64 = (url) =>{
 	var keystr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	var encodestr = "";
@@ -67,7 +71,7 @@ app.get('/*', (req, res) => {
 				var fullUrl = req.protocol + '://' + req.get('host') + '/' + val;
 				res.send(fullUrl);
 			}
-		})		
+		});		
 	}else{
 		var key = req.url.substring(1);
 		console.log(key);
@@ -87,10 +91,19 @@ app.get('/*', (req, res) => {
 		}
 	}
 });
-client.send_command('dbsize',[],(err,size) =>{
+var existHandler = ()=>{
+	client.send_command('DECR',[SERVER_COUNTER],(err,reply) =>{
+		console.log("decrease the counter");
+		client.close();
+	});
+};
+client.send_command('INCR',[SERVER_COUNTER],(err,size) =>{
 	counter = size;
+	client.send_command('CLIENT',['LIST'],(err,reply) =>{
+		console.log(reply);
+	});
 	app.listen(PORT,()=>{
 		console.log('Running on http://localhost:' + PORT);
-	})
+	});
 });
 
