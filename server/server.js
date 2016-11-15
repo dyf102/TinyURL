@@ -1,24 +1,28 @@
 'use strict';
 
-const express = require('express');
-const http = require('http');
-const redis = require('redis');
-const url = require('url');
-const kafka = require('kafka-node');
-
+const express 	= 	require('express');
+const http 		= 	require('http');
+const redis 	= 	require('redis');
+const url 		= 	require('url');
+const kafka 	= 	require('kafka-node');
+const path 		= 	require('path');
+const assert	=	require('assert');
 // Constants
-const PORT = 8080;
-const client = redis.createClient();
+const PORT 		= 	8080;
+const client 	= 	redis.createClient();
 
 // App
 const app = express();
+const SERVER_COUNTER = "SERVER_COUNTER";
 app.enable('trust proxy');
 var counter = 1;
+var totalNode = 4;
+
 
 
 var generateShortURL = (url) => {
 	return convertTobase64(url); 
-};
+}
 var convertTobase64 = (url) =>{
 	var keystr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	var encodestr = "";
@@ -57,7 +61,7 @@ app.get('/*', (req, res) => {
 				client.get(shortURL,(err,val) =>{
 				if(val === null){
 					client.set(shortURL, src,()=>{
-						counter ++;
+						counter += totalNode;
 						client.set(src,shortURL,()=>{});
 					});
 				}
@@ -67,12 +71,13 @@ app.get('/*', (req, res) => {
 				var fullUrl = req.protocol + '://' + req.get('host') + '/' + val;
 				res.send(fullUrl);
 			}
-		})		
+		});		
 	}else{
 		var key = req.url.substring(1);
-		if(key === null){
-			res.status(404);
-			res.send("NOT FOUND");
+		console.log(key);
+		if(key === null || key == ""){
+			console.log(__dirname);
+			res.sendFile(path.join(__dirname+'/static/index.html'));
 		}else{
 			//console.log("hello "+ key)
 			client.get(key,(err,val) =>{
@@ -86,10 +91,20 @@ app.get('/*', (req, res) => {
 		}
 	}
 });
-client.send_command('dbsize',[],(err,size) =>{
+var existHandler = ()=>{
+	client.send_command('DECR',[SERVER_COUNTER],(err,reply) =>{
+		console.log("decrease the counter");
+		client.close();
+	});
+};
+client.send_command('INCR',[SERVER_COUNTER],(err,size) =>{
 	counter = size;
+	// from redis client number to get the total node
+	client.send_command('CLIENT',['LIST'],(err,reply) =>{
+		totalNode = reply.split(/\r\n|\r|\n/).length - 1;
+	});
 	app.listen(PORT,()=>{
 		console.log('Running on http://localhost:' + PORT);
-	})
+	});
 });
 
