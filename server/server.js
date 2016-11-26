@@ -9,7 +9,7 @@ const path 		= 	require('path');
 const assert	=	require('assert');
 // Constants
 const PORT 		= 	8080;
-const client 	= 	redis.createClient();
+const client 	= 	redis.createClient(6379,'redis');
 
 // App
 const app = express();

@@ -19,7 +19,9 @@ A URL shortify service using Nodejs,Expressjs, Redis, Kafka, Spark, Docker, Dock
 ```bash
 git clone https://github.com/dyf102/TinyURL
 cd TinyURL
+docker-compose build
 docker-compose up
+or docker-compose up -d #to start the container in the background
 ```
 ## TODO
 1.	To build the webpage	
