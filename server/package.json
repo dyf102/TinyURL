@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "express": "^4.13.3",
+    "kafka-node": "^1.0.7",
     "redis": "^0.12.1"
   }
 }

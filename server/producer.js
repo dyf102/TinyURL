@@ -2,14 +2,11 @@
 
 var kafka = require('kafka-node');
 var HighLevelProducer = kafka.HighLevelProducer;
-var Client = kafka.Client;
-//inherient from highlevel producer
-var Producer = function(){
-  this.client = new Client();
-  this.topic = 'topic1';
-  HighLevelProducer.call(this,client);
-}
+var client = new kafka.Client("192.168.99.100");
+var producer = new HighLevelProducer(client);
+var topic = 'topic1';
 producer.on('ready', function () {
+  console.log("Hello");
   setInterval(send, 1000);
 });
 
@@ -27,3 +24,4 @@ function send () {
     if (rets === count) process.exit();
   });
 }
+console.log("Hello");
