@@ -18,10 +18,12 @@ app.enable('trust proxy');
 var counter = 1;
 var totalNode = 4;
 
-
-
+var validateURL = (textval) => {
+    var urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
+    return urlregex.test(textval);
+}
 var generateShortURL = (url) => {
-	return convertTobase64(url); 
+	return convertTobase64(url);
 }
 var convertTobase64 = (url) =>{
 	var keystr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -44,11 +46,17 @@ var req_ip = (req) => {
               || req.client.remoteAddress );
 }
 app.get('/*', (req, res) => {
+
 	var url_parts = url.parse(req.originalUrl, true);
 	var query = url_parts.query;
 	console.log(req_ip(req));
 	var src = query['url'];
 	if('url' in query){
+		if(!validateURL(src)){
+			res.status(400);
+			res.send("Invalid URL format");
+			return;
+		}
 		if(!src.startsWith('http')){
 			src = 'http://' + src;
 		}
@@ -57,7 +65,6 @@ app.get('/*', (req, res) => {
 			if(val === null) {
 				var shortURL = generateShortURL(counter);
 				var fullUrl = req.protocol + '://' + req.get('host') + '/' + shortURL;
-				//console.log(shortURL);
 				client.get(shortURL,(err,val) =>{
 				if(val === null){
 					client.set(shortURL, src,()=>{
@@ -71,7 +78,7 @@ app.get('/*', (req, res) => {
 				var fullUrl = req.protocol + '://' + req.get('host') + '/' + val;
 				res.send(fullUrl);
 			}
-		});		
+		});
 	}else{
 		var key = req.url.substring(1);
 		console.log(key);
@@ -107,4 +114,3 @@ client.send_command('INCR',[SERVER_COUNTER],(err,size) =>{
 		console.log('Running on http://localhost:' + PORT);
 	});
 });
-
